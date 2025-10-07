@@ -306,11 +306,16 @@ const animationTimeline = () => {
 const bgmEl = document.getElementById("bgm");
 const muteBtn = document.getElementById("muteToggle");
 let bgmInitialized = false;
+if (muteBtn && bgmEl) {
+  // initialize button icon according to current muted state
+  muteBtn.textContent = bgmEl.muted ? "🔇" : "🔊";
+}
 
 const tryInitBgm = () => {
   if (bgmInitialized || !bgmEl) return;
   bgmInitialized = true;
-  bgmEl.muted = false;
+  // First try to play muted (more likely to pass autoplay policies)
+  bgmEl.muted = true;
   const playPromise = bgmEl.play();
   if (playPromise && typeof playPromise.then === "function") {
     playPromise.catch(() => {
@@ -323,6 +328,8 @@ if (muteBtn && bgmEl) {
   muteBtn.addEventListener("click", () => {
     if (bgmEl.paused) {
       tryInitBgm();
+      // unmute right after user gesture
+      bgmEl.muted = false;
     } else {
       bgmEl.muted = !bgmEl.muted;
     }
@@ -336,6 +343,8 @@ if (muteBtn && bgmEl) {
     evt,
     () => {
       tryInitBgm();
+      // On first gesture, if it started muted, unmute immediately
+      if (bgmEl) bgmEl.muted = false;
     },
     { once: true, passive: true }
   );
