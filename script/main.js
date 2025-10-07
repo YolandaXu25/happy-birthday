@@ -302,5 +302,44 @@ const animationTimeline = () => {
   });
 };
 
+// BGM handling: play on first user interaction; toggle mute
+const bgmEl = document.getElementById("bgm");
+const muteBtn = document.getElementById("muteToggle");
+let bgmInitialized = false;
+
+const tryInitBgm = () => {
+  if (bgmInitialized || !bgmEl) return;
+  bgmInitialized = true;
+  bgmEl.muted = false;
+  const playPromise = bgmEl.play();
+  if (playPromise && typeof playPromise.then === "function") {
+    playPromise.catch(() => {
+      // Autoplay blocked; keep button for manual start
+    });
+  }
+};
+
+if (muteBtn && bgmEl) {
+  muteBtn.addEventListener("click", () => {
+    if (bgmEl.paused) {
+      tryInitBgm();
+    } else {
+      bgmEl.muted = !bgmEl.muted;
+    }
+    muteBtn.textContent = bgmEl.muted ? "🔇" : "🔊";
+  });
+}
+
+// Start after any user gesture
+["click", "touchstart", "keydown"].forEach(evt => {
+  window.addEventListener(
+    evt,
+    () => {
+      tryInitBgm();
+    },
+    { once: true, passive: true }
+  );
+});
+
 // Run fetch and animation in sequence
 fetchData();
